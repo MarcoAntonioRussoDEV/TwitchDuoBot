@@ -1,0 +1,70 @@
+{
+    "name": "twitch-duo-bot",
+    "version": "1.3.2",
+    "description": "Twitch duo queue bot for League of Legends streamers",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron .",
+        "dev": "electron .",
+        "cli": "node index.js",
+        "build": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "deploy": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --publish always",
+        "postinstall": "node scripts/copy-fa.js"
+    },
+    "keywords": [],
+    "author": "Ocrama94",
+    "license": "ISC",
+    "type": "commonjs",
+    "build": {
+        "appId": "com.ocrama94.twitch-duo-bot",
+        "productName": "Twitch Duo Bot",
+        "directories": {
+            "output": "dist"
+        },
+        "files": [
+            "**/*",
+            "!dist/**",
+            "!node_modules/.cache/**",
+            "!**/*.md",
+            "!.env.example",
+            "!.git/**",
+            "!.vscode/**"
+        ],
+        "win": {
+            "target": [
+                {
+                    "target": "nsis",
+                    "arch": [
+                        "x64"
+                    ]
+                }
+            ]
+        },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true
+        },
+        "icon": "build/icon.ico",
+        "publish": {
+            "provider": "github",
+            "owner": "MarcoAntonioRussoDEV",
+            "repo": "TwitchDuoBot"
+        }
+    },
+    "dependencies": {
+        "axios": "^1.15.2",
+        "dotenv": "^17.4.2",
+        "electron-updater": "^6.8.3",
+        "playwright": "^1.59.1",
+        "tmi.js": "^1.8.5"
+    },
+    "devDependencies": {
+        "@fortawesome/fontawesome-free": "^7.2.0",
+        "cross-env": "^10.1.0",
+        "electron": "^41.3.0",
+        "electron-builder": "^26.8.1",
+        "electron-reload": "^2.0.0-alpha.1"
+    }
+}

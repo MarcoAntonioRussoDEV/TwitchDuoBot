@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="it">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'"
+        />
+        <title>Twitch Duo Bot</title>
+        <link
+            rel="stylesheet"
+            href="vendor/fa/css/all.min.css"
+        />
+        <link
+            rel="stylesheet"
+            href="styles.css"
+        />
+    </head>
+    <body>
+        <div
+            id="updateBanner"
+            class="update-banner"
+        >
+            <span id="updateBannerText"></span>
+            <button
+                class="btn btn-success btn-sm"
+                id="btnInstallUpdate"
+            >
+                🔄 Riavvia e installa
+            </button>
+        </div>
+        <header>
+            <div class="header-left">
+                <h1>Twitch Duo Bot</h1>
+            </div>
+            <div class="header-center">
+                <button
+                    class="btn btn-primary"
+                    id="btnStart"
+                >
+                    ▶ Avvia Bot
+                </button>
+                <button
+                    class="btn btn-danger"
+                    id="btnStop"
+                    disabled
+                >
+                    ■ Ferma Bot
+                </button>
+            </div>
+            <div class="header-right">
+                <button
+                    class="btn btn-outline-update"
+                    id="btnCheckUpdate"
+                    title="Controlla aggiornamenti"
+                >
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span class="btn-label">Update</span>
+                </button>
+                <button
+                    class="btn btn-icon"
+                    id="btnSettings"
+                    title="Impostazioni"
+                >
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+                <button
+                    class="btn btn-icon"
+                    id="btnCredits"
+                    title="GitHub Repository"
+                >
+                    <i class="fa-brands fa-github"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="main">
+            <!-- Queue -->
+            <div class="queue-panel">
+                <div class="panel-header">
+                    <span>Coda</span>
+                    <span
+                        class="queue-count"
+                        id="queueCount"
+                        >0</span
+                    >
+                </div>
+                <div
+                    class="queue-list"
+                    id="queueList"
+                >
+                    <div class="queue-empty">La coda è vuota</div>
+                </div>
+            </div>
+
+            <!-- Right -->
+            <div class="right-panel">
+                <!-- Admin controls -->
+                <div class="controls">
+                    <div class="controls-title">Controlli Admin</div>
+                    <div class="btn-grid">
+                        <button
+                            class="btn btn-ghost"
+                            id="btnNext"
+                        >
+                            <i class="fa-solid fa-forward-step"></i> Prossimo
+                        </button>
+                        <button
+                            class="btn btn-ghost"
+                            id="btnSkip"
+                        >
+                            <i class="fa-solid fa-forward"></i> Salta
+                        </button>
+                        <button
+                            class="btn btn-ghost"
+                            id="btnSkipNext"
+                        >
+                            <i class="fa-solid fa-forward-fast"></i> Salta +
+                            Prossimo
+                        </button>
+                        <button
+                            class="btn btn-ghost"
+                            id="btnClear"
+                        >
+                            <i class="fa-solid fa-trash-can"></i> Svuota Coda
+                        </button>
+                        <button
+                            class="btn btn-ghost"
+                            id="btnLiveRank"
+                            title="Scrive in chat il rank di tutti i giocatori nella partita attuale dello streamer"
+                        >
+                            <i class="fa-solid fa-trophy"></i> Live Rank
+                        </button>
+                        <button
+                            class="btn btn-ghost"
+                            id="btnSaveQueue"
+                            title="Salva la coda su disco"
+                        >
+                            <i class="fa-solid fa-floppy-disk"></i> Salva Coda
+                        </button>
+                    </div>
+                    <div class="input-rows">
+                        <input
+                            type="text"
+                            id="removeInput"
+                            placeholder="Nick LoL da rimuovere..."
+                            class="input-span2"
+                        />
+                        <button
+                            class="btn btn-ghost"
+                            id="btnRemove"
+                        >
+                            <i class="fa-solid fa-user-minus"></i> Rimuovi
+                        </button>
+                        <input
+                            type="text"
+                            id="addTwitchInput"
+                            placeholder="Twitch user (es. ocrama94)"
+                        />
+                        <input
+                            type="text"
+                            id="addLolInput"
+                            placeholder="Nick LoL#TAG"
+                        />
+                        <button
+                            class="btn btn-ghost"
+                            id="btnAddManual"
+                        >
+                            <i class="fa-solid fa-user-plus"></i> Aggiungi
+                        </button>
+                    </div>
+                    <div class="drag-hint">
+                        Trascina gli elementi della coda per riordinarli.
+                    </div>
+                </div>
+
+                <!-- Log -->
+                <div class="log-panel">
+                    <div class="panel-header">
+                        <span>Log</span>
+                        <button
+                            class="btn btn-ghost btn-sm"
+                            id="btnClearLog"
+                        >
+                            <i class="fa-solid fa-broom"></i> Cancella
+                        </button>
+                    </div>
+                    <div
+                        class="log-list"
+                        id="logList"
+                    ></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div
+            class="modal-overlay"
+            id="settingsModal"
+        >
+            <div class="modal">
+                <h2>⚙ Configurazione</h2>
+
+                <div
+                    class="modal-warning"
+                    id="modalWarning"
+                >
+                    Compila tutti i campi obbligatori prima di avviare il bot.
+                </div>
+
+                <div class="modal-section">Twitch</div>
+                <div class="field">
+                    <label
+                        >OAuth Token del bot (Access Token)
+                        <small style="color: #555"
+                            >(twitchtokengenerator.com)</small
+                        >
+                    </label>
+                    <div style="display: flex; gap: 7px; align-items: center">
+                        <input
+                            type="password"
+                            id="cfgOauthToken"
+                            placeholder="Incolla qui l'Access Token"
+                            style="flex: 1"
+                        />
+                        <a
+                            href="https://twitchtokengenerator.com/"
+                            target="_blank"
+                            class="btn btn-ghost"
+                            id="btnGenerateToken"
+                            title="Apre twitchtokengenerator.com per generare il token"
+                            >Genera</a
+                        >
+                    </div>
+                    <ol
+                        style="
+                            font-size: 11px;
+                            color: #b8860b;
+                            background: rgba(255, 200, 0, 0.07);
+                            border: 1px solid rgba(255, 200, 0, 0.25);
+                            border-radius: 6px;
+                            margin: 6px 0 0 0;
+                            padding: 8px 8px 8px 26px;
+                            line-height: 1.8;
+                        "
+                    >
+                        <li>
+                            Clicca <strong>Genera</strong> per aprire il sito
+                        </li>
+                        <li>Clicca <strong>Bot Chat Token</strong></li>
+                        <li>Accedi con il tuo account Twitch</li>
+                        <li>
+                            Copia l&apos;<strong>Access Token</strong> e
+                            incollalo nel campo
+                        </li>
+                    </ol>
+                </div>
+                <div class="field">
+                    <label>Canale Twitch</label>
+                    <input
+                        type="text"
+                        id="cfgTwitchChannel"
+                        placeholder="es. ocrama94"
+                    />
+                </div>
+
+                <div class="field field-checkbox">
+                    <label
+                        class="checkbox-label"
+                        for="cfgDuoSubOnly"
+                    >
+                        <input
+                            type="checkbox"
+                            id="cfgDuoSubOnly"
+                        />
+                        Solo SUB
+                    </label>
+                    <small>
+                        Seleziona se il comando <strong>!duo</strong> deve
+                        essere riservato ai soli abbonati.
+                    </small>
+                </div>
+
+                <div class="modal-section">Riot / League of Legends</div>
+                <div class="field">
+                    <label
+                        >Account dello streamer
+                        <small style="color: #555"
+                            >(puoi aggiungere più account)</small
+                        >
+                    </label>
+                    <div id="riotAccountsList"></div>
+                    <button
+                        type="button"
+                        class="btn btn-ghost btn-sm"
+                        id="btnAddRiotAccount"
+                        style="margin-top: 6px"
+                    >
+                        + Aggiungi account
+                    </button>
+                </div>
+
+                <div class="modal-footer">
+                    <button
+                        class="btn btn-ghost"
+                        id="btnSettingsCancel"
+                    >
+                        Annulla
+                    </button>
+                    <button
+                        class="btn btn-primary"
+                        id="btnSettingsSave"
+                    >
+                        Salva
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rank Modal -->
+        <div
+            class="modal-overlay"
+            id="rankModal"
+        >
+            <div class="modal modal-rank">
+                <div class="rank-modal-header">
+                    <h2><i class="fa-solid fa-trophy"></i> Live Rank</h2>
+                    <div class="rank-modal-actions">
+                        <button
+                            class="btn btn-ghost btn-sm"
+                            id="btnPostRankChat"
+                            title="Posta in chat Twitch"
+                        >
+                            <i class="fa-brands fa-twitch"></i> Post Chat
+                        </button>
+                        <button
+                            class="btn btn-icon"
+                            id="btnCloseRankModal"
+                        >
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="rankModalContent"></div>
+            </div>
+        </div>
+
+        <footer class="app-footer">
+            <span id="appFooter">Made by Marco Antonio Russo - Ocrama94</span>
+            <div class="footer-status">
+                <div class="status-badge">
+                    <div
+                        class="status-dot"
+                        id="statusDot"
+                    ></div>
+                    <span id="statusText">Disconnesso</span>
+                </div>
+                <div
+                    class="status-badge"
+                    id="riotStatusBadge"
+                    style="display: none"
+                >
+                    <div
+                        class="status-dot"
+                        id="riotStatusDot"
+                    ></div>
+                    <span id="riotStatusText">Riot API</span>
+                </div>
+            </div>
+        </footer>
+        <script src="renderer.js"></script>
+    </body>
+</html>

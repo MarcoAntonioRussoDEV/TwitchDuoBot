@@ -1,0 +1,23 @@
+# Variabili d'ambiente — MAI committare il file reale
+.env
+
+# Dipendenze
+node_modules/
+
+# Build Electron
+dist/
+out/
+
+# Log
+*.log
+npm-debug.log*
+jsconfig.json
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+
+
