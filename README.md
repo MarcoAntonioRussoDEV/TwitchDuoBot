@@ -4,6 +4,8 @@
 
 This is a personal, non-commercial Twitch chat bot designed to manage a **duo queue system** for a League of Legends streamer on Twitch. The bot is built with Node.js and Electron, runs locally on the streamer's machine, and serves a single Twitch channel.
 
+### This bot was created specifically for the needs of the streamer [kyasarin](https://www.twitch.tv/kyasarin).
+
 The bot allows viewers (optionally restricted to active subscribers) to join a queue to play alongside the streamer in a duo game. It integrates with the Riot Games API to automatically detect when a match has ended and remove from the queue the player who actually played with the streamer, keeping the queue accurate without any manual intervention. It also provides live in-game rank information for all participants in the streamer's current match.
 
 ### Features
@@ -94,6 +96,8 @@ The application does not require elevated scopes or write access to any Riot dat
 ### Descrizione del Progetto
 
 Questo è un bot Twitch personale e non commerciale progettato per gestire un **sistema di coda duo** per uno streamer di League of Legends su Twitch. Il bot è sviluppato in Node.js con interfaccia desktop Electron, gira localmente sul PC dello streamer e serve un unico canale Twitch.
+
+### Questo bot è stato creato specificamente per le esigenze della streamer [kyasarin](https://www.twitch.tv/kyasarin).
 
 Il bot permette ai viewer (facoltativamente limitati ai soli abbonati) di iscriversi a una coda per giocare in duo con lo streamer. Integra le API di Riot Games per rilevare automaticamente il termine di una partita e rimuovere dalla coda il giocatore che ha effettivamente giocato con lo streamer, mantenendo la coda aggiornata senza intervento manuale. Fornisce inoltre informazioni di rank in tempo reale per tutti i partecipanti alla partita live dello streamer.
 
