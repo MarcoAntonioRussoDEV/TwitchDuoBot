@@ -43,12 +43,15 @@ function getEnvPath() {
     return path.join(__dirname, ".env");
 }
 
-// Carica la RIOT_API_KEY dal file .env bundlato nell'asar (non è nel repo)
-if (app.isPackaged) {
-    require("dotenv").config({ path: path.join(__dirname, ".env") });
-}
 // .env utente in userData (token Twitch, canale, nome Riot, tag)
 require("dotenv").config({ path: getEnvPath() });
+// Carica la RIOT_API_KEY dal file .env bundlato nell'asar (override: true per prevalere su userData)
+if (app.isPackaged) {
+    require("dotenv").config({
+        path: path.join(__dirname, ".env"),
+        override: true,
+    });
+}
 
 const bot = require("./bot");
 

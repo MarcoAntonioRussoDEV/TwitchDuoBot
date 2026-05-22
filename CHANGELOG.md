@@ -1,5 +1,9 @@
 ## Change Logs
 
+## 1.3.3
+
+- **Salvataggio automatico della coda**: la coda viene salvata su `saved-queue.json` ad ogni modifica (aggiunta, rimozione, skip, riordino drag-and-drop, comandi chat), senza necessità di premere il tasto "Salva Coda" manualmente.
+
 ## 1.3.2
 
 - Aggiunta **modale Live Rank** grafica: il tasto Live Rank apre una finestra con i 10 partecipanti divisi per team (Team Blu / Team Rosso), ognuno con badge colorato per tier, nome campione e rank soloQ.

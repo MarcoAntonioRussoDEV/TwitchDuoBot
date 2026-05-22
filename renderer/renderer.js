@@ -273,6 +273,7 @@ function setStatus(status) {
 function renderQueue(queue) {
     currentQueue = [...queue];
     queueCount.textContent = queue.length;
+    window.bot.saveQueue();
 
     if (queue.length === 0) {
         queueList.innerHTML = '<div class="queue-empty">La coda è vuota</div>';
@@ -433,6 +434,9 @@ function updateRiotStatus({ ok, error }) {
     if (ok) {
         dot.className = "status-dot connected";
         text.textContent = "Riot API ✓";
+    } else if (error === "Configurazione incompleta") {
+        dot.className = "status-dot disconnected";
+        text.textContent = "Riot API — Non configurata";
     } else {
         dot.className = "status-dot error";
         text.textContent = "Riot API ✗ — Key non valida";

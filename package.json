@@ -1,6 +1,6 @@
 {
     "name": "twitch-duo-bot",
-    "version": "1.3.2",
+    "version": "1.3.3",
     "description": "Twitch duo queue bot for League of Legends streamers",
     "main": "main.js",
     "scripts": {
