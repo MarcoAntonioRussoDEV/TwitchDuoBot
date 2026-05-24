@@ -1,5 +1,9 @@
 ## Change Logs
 
+## 1.3.4
+
+- Aggiornata icona
+
 ## 1.3.3
 
 - **Salvataggio automatico della coda**: la coda viene salvata su `saved-queue.json` ad ogni modifica (aggiunta, rimozione, skip, riordino drag-and-drop, comandi chat), senza necessità di premere il tasto "Salva Coda" manualmente.
