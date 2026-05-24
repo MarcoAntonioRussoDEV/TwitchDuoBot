@@ -13,7 +13,7 @@ contextBridge.exposeInMainWorld("updater", {
             cb(progress),
         ),
     onUpdateDownloaded: cb =>
-        ipcRenderer.on("updater:update-downloaded", () => cb()),
+        ipcRenderer.on("updater:update-downloaded", (_, info) => cb(info)),
     install: () => ipcRenderer.invoke("updater:install"),
     check: () => ipcRenderer.invoke("updater:check"),
 });

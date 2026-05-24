@@ -23,6 +23,13 @@
         >
             <span id="updateBannerText"></span>
             <button
+                class="btn btn-ghost btn-sm"
+                id="btnShowChangelog"
+                style="display: none"
+            >
+                📋 Novità
+            </button>
+            <button
                 class="btn btn-success btn-sm"
                 id="btnInstallUpdate"
             >
@@ -312,6 +319,42 @@
                         id="btnSettingsSave"
                     >
                         Salva
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Changelog Modal -->
+        <div
+            class="modal-overlay"
+            id="changelogModal"
+        >
+            <div class="modal modal-changelog">
+                <div class="changelog-modal-header">
+                    <h2>📋 Novità in questa versione</h2>
+                    <button
+                        class="btn btn-icon"
+                        id="btnCloseChangelog"
+                    >
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div
+                    id="changelogContent"
+                    class="changelog-content"
+                ></div>
+                <div class="modal-footer">
+                    <button
+                        class="btn btn-ghost"
+                        id="btnCloseChangelog2"
+                    >
+                        Chiudi
+                    </button>
+                    <button
+                        class="btn btn-success"
+                        id="btnInstallUpdate2"
+                    >
+                        🔄 Riavvia e installa
                     </button>
                 </div>
             </div>

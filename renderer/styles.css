@@ -620,6 +620,67 @@ input {
     display: block;
 }
 
+/* ── Changelog Modal ── */
+.modal-changelog {
+    width: 560px;
+    max-width: 95vw;
+}
+
+.changelog-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.changelog-modal-header h2 {
+    margin-bottom: 0;
+}
+
+.changelog-content {
+    font-size: 13px;
+    color: #adadb8;
+    line-height: 1.7;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.changelog-content h1,
+.changelog-content h2,
+.changelog-content h3 {
+    color: #efeff1;
+    font-size: 13px;
+    font-weight: 700;
+    margin: 14px 0 6px;
+}
+
+.changelog-content ul,
+.changelog-content ol {
+    padding-left: 20px;
+    margin: 4px 0;
+}
+
+.changelog-content li {
+    margin-bottom: 4px;
+}
+
+.changelog-content p {
+    margin: 4px 0;
+}
+
+.changelog-content strong {
+    color: #efeff1;
+}
+
+.changelog-content code {
+    background: #0e0e10;
+    border: 1px solid #333;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 11px;
+}
+
 /* ── Rank Modal ── */
 .modal-rank {
     width: 640px;

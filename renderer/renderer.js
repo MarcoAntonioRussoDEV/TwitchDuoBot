@@ -548,6 +548,9 @@ document.getElementById("btnSaveQueue").addEventListener("click", async () => {
 const updateBanner = document.getElementById("updateBanner");
 const updateBannerText = document.getElementById("updateBannerText");
 const btnInstallUpdate = document.getElementById("btnInstallUpdate");
+const btnShowChangelog = document.getElementById("btnShowChangelog");
+const changelogModal = document.getElementById("changelogModal");
+const changelogContent = document.getElementById("changelogContent");
 
 btnInstallUpdate.style.display = "none";
 
@@ -562,12 +565,40 @@ window.updater.onDownloadProgress(progress => {
     updateBannerText.textContent = `⬇ Download aggiornamento: ${pct}% — ${mbps} MB/s`;
 });
 
-window.updater.onUpdateDownloaded(() => {
-    updateBannerText.textContent = "✅ Aggiornamento scaricato e pronto!";
+window.updater.onUpdateDownloaded(info => {
+    const ver = info?.version ? ` v${info.version}` : "";
+    updateBannerText.textContent = `✅ Aggiornamento${ver} scaricato e pronto!`;
     btnInstallUpdate.style.display = "";
+
+    if (info?.releaseNotes) {
+        const notes =
+            typeof info.releaseNotes === "string"
+                ? info.releaseNotes
+                : info.releaseNotes
+                      .map(r => `<h3>v${r.version}</h3>${r.note}`)
+                      .join("");
+        changelogContent.innerHTML = notes;
+        btnShowChangelog.style.display = "";
+    }
 });
 
 btnInstallUpdate.addEventListener("click", () => window.updater.install());
+
+btnShowChangelog.addEventListener("click", () =>
+    changelogModal.classList.add("open"),
+);
+
+document
+    .getElementById("btnCloseChangelog")
+    .addEventListener("click", () => changelogModal.classList.remove("open"));
+
+document
+    .getElementById("btnCloseChangelog2")
+    .addEventListener("click", () => changelogModal.classList.remove("open"));
+
+document
+    .getElementById("btnInstallUpdate2")
+    .addEventListener("click", () => window.updater.install());
 
 document
     .getElementById("btnCheckUpdate")

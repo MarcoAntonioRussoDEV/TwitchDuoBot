@@ -16,8 +16,11 @@ function setupAutoUpdater() {
         win?.webContents.send("updater:download-progress", progress);
     });
 
-    autoUpdater.on("update-downloaded", () => {
-        win?.webContents.send("updater:update-downloaded");
+    autoUpdater.on("update-downloaded", info => {
+        win?.webContents.send("updater:update-downloaded", {
+            version: info.version,
+            releaseNotes: info.releaseNotes ?? null,
+        });
     });
 
     autoUpdater.on("error", () => {}); // silent in produzione

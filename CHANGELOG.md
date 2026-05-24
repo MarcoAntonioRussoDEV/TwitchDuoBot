@@ -1,5 +1,13 @@
 ## Change Logs
 
+## 1.3.6
+
+- Test visualizzazione release notes al momento dell'aggiornamento.
+
+## 1.3.5
+
+- **Release notes al momento dell'aggiornamento**: quando un aggiornamento è pronto, compare il pulsante **📋 Novità** nel banner — cliccandolo si apre una modale con le note della nuova versione prese dalla release GitHub.
+
 ## 1.3.4
 
 - Aggiornata icona
