@@ -1,5 +1,6 @@
-# Variabili d'ambiente — MAI committare il file reale
+# Variabili d'ambiente — MAI committare i file reali
 .env
+.env.bak
 
 # Dipendenze
 node_modules/

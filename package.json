@@ -7,9 +7,13 @@
         "start": "electron .",
         "dev": "electron .",
         "cli": "node index.js",
+        "prebuild": "node scripts/prebuild-env.js",
         "build": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
+        "postbuild": "node scripts/postbuild-env.js",
+        "predeploy": "node scripts/prebuild-env.js",
         "test": "echo \"Error: no test specified\" && exit 1",
         "deploy": "cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --publish always",
+        "postdeploy": "node scripts/postbuild-env.js",
         "postinstall": "node scripts/copy-fa.js"
     },
     "keywords": [],
