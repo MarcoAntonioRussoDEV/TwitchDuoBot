@@ -516,6 +516,34 @@ document.getElementById("btnClearLog").addEventListener("click", () => {
     logList.innerHTML = "";
 });
 
+// ── Toggle Coda ────────────────────────────────────────────────
+
+const btnToggleQueue = document.getElementById("btnToggleQueue");
+
+function updateQueueToggleBtn(open) {
+    if (open) {
+        btnToggleQueue.innerHTML =
+            '<i class="fa-solid fa-lock-open"></i> Chiudi Coda';
+        btnToggleQueue.className = "btn btn-success";
+        btnToggleQueue.title = "La coda è aperta — clicca per chiuderla";
+    } else {
+        btnToggleQueue.innerHTML = '<i class="fa-solid fa-lock"></i> Apri Coda';
+        btnToggleQueue.className = "btn btn-danger";
+        btnToggleQueue.title = "La coda è chiusa — clicca per aprirla";
+    }
+}
+
+btnToggleQueue.addEventListener("click", async () => {
+    const currentOpen = await window.bot.getQueueOpen();
+    await window.bot.setQueueOpen(!currentOpen);
+    updateQueueToggleBtn(!currentOpen);
+});
+
+window.bot.onQueueState(open => updateQueueToggleBtn(open));
+
+// Inizializza stato del pulsante
+window.bot.getQueueOpen().then(open => updateQueueToggleBtn(open));
+
 removeInput.addEventListener("keydown", e => {
     if (e.key === "Enter") document.getElementById("btnRemove").click();
 });

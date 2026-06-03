@@ -167,6 +167,10 @@ app.whenReady().then(() => {
     bot.on("riot-status", result => {
         win?.webContents.send("bot:riot-status", result);
     });
+
+    bot.on("queue-state", open => {
+        win?.webContents.send("bot:queue-state", open);
+    });
 });
 
 app.on("window-all-closed", async () => {
@@ -253,6 +257,14 @@ ipcMain.handle("queue:load", () => {
     } catch (_) {
         return { ok: false, queue: [] };
     }
+});
+
+ipcMain.handle("bot:setQueueOpen", (_, open) => {
+    bot.setQueueOpen(open);
+});
+
+ipcMain.handle("bot:getQueueOpen", () => {
+    return bot.queueOpen;
 });
 
 ipcMain.handle("config:get", () => readEnv());

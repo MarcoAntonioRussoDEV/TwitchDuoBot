@@ -42,10 +42,14 @@ contextBridge.exposeInMainWorld("bot", {
     getQueue: () => ipcRenderer.invoke("bot:getQueue"),
     saveQueue: () => ipcRenderer.invoke("queue:save"),
     loadQueue: () => ipcRenderer.invoke("queue:load"),
+    setQueueOpen: open => ipcRenderer.invoke("bot:setQueueOpen", open),
+    getQueueOpen: () => ipcRenderer.invoke("bot:getQueueOpen"),
     onLog: cb => ipcRenderer.on("bot:log", (_, msg) => cb(msg)),
     onQueueUpdate: cb =>
         ipcRenderer.on("bot:queue-update", (_, queue) => cb(queue)),
     onStatus: cb => ipcRenderer.on("bot:status", (_, status) => cb(status)),
     onRiotStatus: cb =>
         ipcRenderer.on("bot:riot-status", (_, result) => cb(result)),
+    onQueueState: cb =>
+        ipcRenderer.on("bot:queue-state", (_, open) => cb(open)),
 });

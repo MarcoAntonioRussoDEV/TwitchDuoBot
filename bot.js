@@ -9,12 +9,25 @@ class Bot extends EventEmitter {
     constructor() {
         super();
         this.queue = [];
+        this.queueOpen = true;
         this.botStartTime = Date.now();
         this.debug = false;
         this.client = null;
         this.streamerPuuids = [];
         this._checkInterval = null;
         this.running = false;
+    }
+
+    setQueueOpen(open) {
+        this.queueOpen = Boolean(open);
+        this.emit("queue-state", this.queueOpen);
+        if (this.client) {
+            const msg = this.queueOpen
+                ? "🟢 La coda è ora APERTA! Usa !duo per entrare."
+                : "🔴 La coda è ora CHIUSA! Non è possibile entrare in coda.";
+            this.client.say(this._channel, msg);
+        }
+        this._log(this.queueOpen ? "Coda aperta" : "Coda chiusa");
     }
 
     _log(msg) {
@@ -151,6 +164,7 @@ class Bot extends EventEmitter {
             const helpMessage = [
                 "📌 Comandi disponibili:",
                 `!duo <nickLoL> → Entra in coda (${duoModeLabel})`,
+                "!openqueue / !closequeue → Apre/chiude la coda (solo Mod/Admin)",
                 "!queue → Mostra la coda",
                 "!me → Mostra la tua posizione",
                 "!next → Annuncia il prossimo in coda",
@@ -169,6 +183,13 @@ class Bot extends EventEmitter {
         }
 
         if (command === "!duo") {
+            if (!this.queueOpen) {
+                this.client.say(
+                    channel,
+                    `@${tags.username} la coda è chiusa, non è possibile entrare al momento`,
+                );
+                return;
+            }
             if (duoSubOnly && !tags.subscriber) {
                 this.client.say(
                     channel,
@@ -241,6 +262,30 @@ class Bot extends EventEmitter {
                 `Prossimo: @${next.twitchUser} (${next.lolNick})`,
             );
             this._emitQueue();
+            return;
+        }
+
+        if (command === "!openqueue") {
+            if (!helperFunctions.isModOrStreamer(tags)) {
+                this.client.say(
+                    channel,
+                    `@${tags.username} non hai i permessi per usare questo comando`,
+                );
+                return;
+            }
+            this.setQueueOpen(true);
+            return;
+        }
+
+        if (command === "!closequeue") {
+            if (!helperFunctions.isModOrStreamer(tags)) {
+                this.client.say(
+                    channel,
+                    `@${tags.username} non hai i permessi per usare questo comando`,
+                );
+                return;
+            }
+            this.setQueueOpen(false);
             return;
         }
 

@@ -1,5 +1,13 @@
 ## Change Logs
 
+## 1.3.7
+
+- Aggiunta funzionalità **Apri/Chiudi Coda**: il pulsante nell'UI permette di aprire o chiudere la coda in tempo reale.
+    - Quando la coda è **chiusa**, il comando `!duo` viene bloccato e il bot risponde al viewer informandolo.
+    - Quando la coda cambia stato, il bot annuncia in chat l'apertura o chiusura con un messaggio dedicato.
+    - Aggiunti comandi chat `!openqueue` e `!closequeue` (riservati a Mod/Admin) per aprire e chiudere la coda direttamente dalla chat Twitch.
+    - Il pulsante cambia aspetto dinamicamente: verde con lucchetto aperto quando la coda è aperta, rosso con lucchetto chiuso quando è chiusa.
+
 ## 1.3.6
 
 - Test visualizzazione release notes al momento dell'aggiornamento.
