@@ -20,7 +20,7 @@ Thumbs.db
 
 # Editor
 .vscode
-
+.claude
 
 
 clearEnv
