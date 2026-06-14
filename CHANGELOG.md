@@ -1,5 +1,9 @@
 ## Change Logs
 
+## 1.4.0
+
+- Aggiunta autenticazione Twitch OAuth
+
 ## 1.3.7
 
 - Aggiunta funzionalità **Apri/Chiudi Coda**: il pulsante nell'UI permette di aprire o chiudere la coda in tempo reale.
