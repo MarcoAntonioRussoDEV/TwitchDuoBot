@@ -190,19 +190,50 @@
 
                 <!-- Log -->
                 <div class="log-panel">
-                    <div class="panel-header">
-                        <span>Log</span>
+                    <div class="log-header">
+                        <div class="log-tabs">
+                            <button
+                                class="log-tab active"
+                                id="tabUserLog"
+                            >
+                                Utente
+                                <span
+                                    class="tab-count"
+                                    id="userLogCount"
+                                    >0</span
+                                >
+                            </button>
+                            <button
+                                class="log-tab"
+                                id="tabDevLog"
+                            >
+                                Dev
+                                <span
+                                    class="tab-count"
+                                    id="devLogCount"
+                                    >0</span
+                                >
+                            </button>
+                        </div>
                         <button
-                            class="btn btn-ghost btn-sm"
+                            class="log-clear-btn"
                             id="btnClearLog"
+                            title="Cancella log"
                         >
-                            <i class="fa-solid fa-broom"></i> Cancella
+                            ✕
                         </button>
                     </div>
-                    <div
-                        class="log-list"
-                        id="logList"
-                    ></div>
+                    <div class="log-content">
+                        <div
+                            class="log-list"
+                            id="logUserList"
+                        ></div>
+                        <div
+                            class="log-list"
+                            id="logDevList"
+                            style="display: none"
+                        ></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -224,58 +255,33 @@
 
                 <div class="modal-section">Twitch</div>
                 <div class="field">
-                    <label
-                        >OAuth Token del bot (Access Token)
-                        <small style="color: #555"
-                            >(twitchtokengenerator.com)</small
+                    <label>Account bot Twitch</label>
+                    <div style="display: flex; gap: 8px; align-items: center">
+                        <span
+                            id="twitchLoginStatus"
+                            style="flex: 1; color: #888; font-size: 13px"
+                            >Non connesso</span
                         >
-                    </label>
-                    <div style="display: flex; gap: 7px; align-items: center">
-                        <input
-                            type="password"
-                            id="cfgOauthToken"
-                            placeholder="Incolla qui l'Access Token"
-                            style="flex: 1"
-                        />
-                        <a
-                            href="https://twitchtokengenerator.com/"
-                            target="_blank"
-                            class="btn btn-ghost"
-                            id="btnGenerateToken"
-                            title="Apre twitchtokengenerator.com per generare il token"
-                            >Genera</a
+                        <button
+                            type="button"
+                            class="btn btn-primary btn-sm"
+                            id="btnTwitchLogin"
                         >
+                            <i class="fa-brands fa-twitch"></i> Accedi con
+                            Twitch
+                        </button>
                     </div>
-                    <ol
+                    <small
                         style="
+                            color: #888;
                             font-size: 11px;
-                            color: #b8860b;
-                            background: rgba(255, 200, 0, 0.07);
-                            border: 1px solid rgba(255, 200, 0, 0.25);
-                            border-radius: 6px;
-                            margin: 6px 0 0 0;
-                            padding: 8px 8px 8px 26px;
-                            line-height: 1.8;
+                            margin-top: 4px;
+                            display: block;
                         "
                     >
-                        <li>
-                            Clicca <strong>Genera</strong> per aprire il sito
-                        </li>
-                        <li>Clicca <strong>Bot Chat Token</strong></li>
-                        <li>Accedi con il tuo account Twitch</li>
-                        <li>
-                            Copia l&apos;<strong>Access Token</strong> e
-                            incollalo nel campo
-                        </li>
-                    </ol>
-                </div>
-                <div class="field">
-                    <label>Canale Twitch</label>
-                    <input
-                        type="text"
-                        id="cfgTwitchChannel"
-                        placeholder="es. ocrama94"
-                    />
+                        Il bot si connetterà alla chat con l&apos;account con
+                        cui effettui il login.
+                    </small>
                 </div>
 
                 <div class="field field-checkbox">
@@ -405,6 +411,21 @@
                     ></div>
                     <span id="statusText">Disconnesso</span>
                 </div>
+                <div
+                    class="status-badge"
+                    id="twitchStatusBadge"
+                    style="display: none"
+                >
+                    <div
+                        class="status-dot"
+                        id="twitchStatusDot"
+                    ></div>
+                    <i
+                        class="fa-brands fa-twitch"
+                        style="color: #9147ff; font-size: 11px"
+                    ></i>
+                </div>
+
                 <div
                     class="status-badge"
                     id="riotStatusBadge"
