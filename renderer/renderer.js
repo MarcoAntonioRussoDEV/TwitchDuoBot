@@ -1,11 +1,11 @@
 // @ts-nocheck
+
 const statusDot = document.getElementById("statusDot");
 const statusText = document.getElementById("statusText");
 const btnStart = document.getElementById("btnStart");
 const btnStop = document.getElementById("btnStop");
 const queueList = document.getElementById("queueList");
 const queueCount = document.getElementById("queueCount");
-const logList = document.getElementById("logList");
 const removeInput = document.getElementById("removeInput");
 const addTwitchInput = document.getElementById("addTwitchInput");
 const addLolInput = document.getElementById("addLolInput");
@@ -18,8 +18,6 @@ let draggedIndex = null;
 // ── Settings Modal ──────────────────────────────────────────────
 
 const CFG_FIELDS = {
-    TWITCH_OAUTH_TOKEN: "cfgOauthToken",
-    TWITCH_CHANNEL: "cfgTwitchChannel",
     DUO_SUB_ONLY: "cfgDuoSubOnly",
 };
 
@@ -33,6 +31,13 @@ async function openSettings({ mandatory = false } = {}) {
             input.value = cfg[key] ?? "";
         }
     }
+    const twitchStatus = document.getElementById("twitchLoginStatus");
+    const twitchUser = cfg.TWITCH_BOT_USERNAME;
+    twitchStatus.textContent = twitchUser
+        ? `Connesso come: @${twitchUser}`
+        : "Non connesso";
+    twitchStatus.style.color = twitchUser ? "#9147ff" : "#888";
+
     loadRiotAccountRows(cfg.STREAMER_RIOT_ACCOUNTS ?? "");
     modalWarning.classList.toggle("show", mandatory);
     // Se obbligatorio (primo avvio), nasconde il pulsante Annulla
@@ -55,9 +60,36 @@ document
         ),
     );
 
+document.getElementById("btnSettings").addEventListener("click", () =>
+    openSettings().catch(err => {
+        console.error("openSettings crash:", err);
+        addLog(`❌ Errore apertura impostazioni: ${err.message}`);
+    }),
+);
+
 document
-    .getElementById("btnSettings")
-    .addEventListener("click", () => openSettings());
+    .getElementById("btnTwitchLogin")
+    .addEventListener("click", async () => {
+        const loginStatus = document.getElementById("twitchLoginStatus");
+        const btn = document.getElementById("btnTwitchLogin");
+        loginStatus.textContent = "Autenticazione in corso...";
+        loginStatus.style.color = "#888";
+        btn.disabled = true;
+
+        try {
+            const result = await window.auth.loginTwitch();
+            loginStatus.textContent = `Connesso come: @${result.username}`;
+            loginStatus.style.color = "#9147ff";
+            addLog(`✅ Login Twitch riuscito come @${result.username}`);
+            await checkAllFilled();
+        } catch (err) {
+            loginStatus.textContent = "Non connesso";
+            loginStatus.style.color = "#888";
+            addLog(`❌ Errore login Twitch: ${err.message}`);
+        } finally {
+            btn.disabled = false;
+        }
+    });
 
 document
     .getElementById("btnSettingsCancel")
@@ -74,20 +106,6 @@ document
             if (key === "DUO_SUB_ONLY") {
                 config[key] = input.checked ? "true" : "false";
                 continue;
-            }
-            const val = input.value.trim();
-            if (!val) {
-                input.classList.add("invalid");
-                valid = false;
-            } else {
-                input.classList.remove("invalid");
-                if (key === "TWITCH_OAUTH_TOKEN") {
-                    config[key] = val.startsWith("oauth:")
-                        ? val
-                        : `oauth:${val}`;
-                } else {
-                    config[key] = val;
-                }
             }
         }
 
@@ -109,8 +127,20 @@ document
                 accountParts.push(`${name}|${tag}`);
             }
         });
-        if (accountParts.length === 0) valid = false;
-        else config.STREAMER_RIOT_ACCOUNTS = accountParts.join(",");
+        if (accountParts.length === 0) {
+            valid = false;
+        } else {
+            config.STREAMER_RIOT_ACCOUNTS = accountParts.join(",");
+        }
+
+        // Verifica che il login Twitch sia stato effettuato
+        const currentCfg = await window.config.get();
+        if (!currentCfg.TWITCH_ACCESS_TOKEN) {
+            modalWarning.classList.add("show");
+            modalWarning.textContent =
+                "Devi effettuare il login con Twitch prima di salvare.";
+            return;
+        }
 
         if (!valid) {
             modalWarning.classList.add("show");
@@ -118,6 +148,8 @@ document
                 "Compila tutti i campi obbligatori prima di avviare il bot.";
             return;
         }
+
+        modalWarning.classList.remove("show");
 
         try {
             await window.config.save(config);
@@ -139,11 +171,7 @@ document
     });
 
 // Rimuove il bordo rosso e nasconde il warning se tutti i campi sono compilati
-function checkAllFilled() {
-    const twitchFilled = [
-        CFG_FIELDS.TWITCH_OAUTH_TOKEN,
-        CFG_FIELDS.TWITCH_CHANNEL,
-    ].every(fid => document.getElementById(fid).value.trim() !== "");
+async function checkAllFilled() {
     const riotRows = document.querySelectorAll(".riot-account-row");
     const riotFilled =
         riotRows.length > 0 &&
@@ -152,14 +180,13 @@ function checkAllFilled() {
                 row.querySelector(".riot-name").value.trim() !== "" &&
                 row.querySelector(".riot-tag").value.trim() !== "",
         );
-    if (twitchFilled && riotFilled) modalWarning.classList.remove("show");
-}
 
-for (const id of [CFG_FIELDS.TWITCH_OAUTH_TOKEN, CFG_FIELDS.TWITCH_CHANNEL]) {
-    document.getElementById(id).addEventListener("input", function () {
-        this.classList.remove("invalid");
-        checkAllFilled();
-    });
+    const cfg = await window.config.get();
+    const twitchLogged = Boolean(cfg.TWITCH_ACCESS_TOKEN);
+
+    if (riotFilled && twitchLogged) {
+        modalWarning.classList.remove("show");
+    }
 }
 
 document
@@ -247,7 +274,10 @@ document.getElementById("btnAddRiotAccount").addEventListener("click", () => {
 (async () => {
     const complete = await window.config.isComplete();
     if (!complete) {
-        openSettings({ mandatory: true });
+        openSettings({ mandatory: true }).catch(err => {
+            console.error("openSettings(mandatory) crash:", err);
+            addLog(`❌ Errore apertura impostazioni: ${err.message}`);
+        });
     } else {
         checkRiotStatus();
     }
@@ -376,18 +406,213 @@ function setupQueueDragAndDrop() {
 }
 
 // ── Log ────────────────────────────────────────────────────────
+/** @typedef {"success"|"error"|"warning"|"info"|"connection"|"queue"|"debug"} LogLevel */
 
+/** @type {{ level: LogLevel, msg: string, details?: string, ts: number }[]} */
+let userLogEntries = [];
+
+/** @type {{ level: LogLevel, msg: string, details?: string, ts: number }[]} */
+let devLogEntries = [];
+
+const MAX_LOG_ENTRIES = 300;
+
+/**
+ * Icone per ogni livello di log
+ */
+const LOG_ICONS = {
+    success: "✅",
+    error: "❌",
+    warning: "⚠️",
+    info: "ℹ️",
+    connection: "🔌",
+    queue: "📋",
+    debug: "🔍",
+};
+
+/**
+ * Determina il livello di log in base al contenuto del messaggio.
+ * @param {string} msg
+ * @returns {{ level: LogLevel, isDev: boolean, details?: string }}
+ */
+function classifyLog(msg) {
+    // Dev-only patterns — messaggi tecnici che vanno SOLO nel dev log
+    const devOnlyPatterns = [
+        /^\[TwitchAuth\]/,
+        /^\[Riot\]/,
+        /^\[Twitch\]/,
+        /^(DEBUG|TRACE)/i,
+        /^Fetching user/,
+        /^Found user id/,
+        /^Fetching channel/,
+        /^Found chatroom/,
+        /^broadcaster_user_id:/,
+        /^chatroom_id:/,
+        /websocket|pusher:ping|pusher:pong/i,
+        /playwright browser/i,
+        /initBrowser/,
+        /Retrying/,
+        /attempt \d+\/\d+/,
+        /Token response/,
+        /Queue state:/,
+        /Connection status:/,
+    ];
+
+    const isDev = devOnlyPatterns.some(p => p.test(msg));
+    let level = "info";
+
+    if (/^✅/.test(msg) || /^✔/.test(msg)) level = "success";
+    else if (
+        /^❌/.test(msg) ||
+        /^✖/.test(msg) ||
+        (/error/i.test(msg) && !/Errore/i.test(msg))
+    )
+        level = "error";
+    else if (/^⚠️/.test(msg) || /warning/i.test(msg)) level = "warning";
+    else if (
+        /^🔌/.test(msg) ||
+        /conness[io]|disconness/i.test(msg) ||
+        /connected|disconnected|connecting/i.test(msg)
+    )
+        level = "connection";
+    else if (/^📋/.test(msg) || (/cod[ae]|queue/i.test(msg) && !isDev))
+        level = "queue";
+    else if (isDev) level = "debug";
+
+    // Estrai dettagli strutturati (dopo il messaggio principale, es. "❌ Errore: ... — Dettaglio: ...")
+    let details;
+    const detailMatch = msg.match(/— Dettaglio: (.+)$/);
+    if (detailMatch) details = detailMatch[1];
+
+    return { level, isDev, details };
+}
+
+/**
+ * Aggiunge un log con classificazione automatica.
+ * @param {string} msg
+ */
 function addLog(msg) {
-    const div = document.createElement("div");
-    div.className = "log-entry";
-    const now = new Date().toLocaleTimeString("it-IT");
-    div.innerHTML = `<span class="log-time">[${now}]</span>${msg}`;
-    logList.appendChild(div);
-    logList.scrollTop = logList.scrollHeight;
+    const { level, isDev, details } = classifyLog(msg);
+    const entry = { level, msg, details, ts: Date.now() };
 
-    // Mantieni al massimo 200 righe di log
-    while (logList.children.length > 200) {
-        logList.removeChild(logList.firstChild);
+    // Always add to dev log
+    devLogEntries.push(entry);
+
+    // Add to user log only if not dev-only
+    if (!isDev) {
+        userLogEntries.push(entry);
+    }
+
+    // Trim logs
+    if (userLogEntries.length > MAX_LOG_ENTRIES) userLogEntries.shift();
+    if (devLogEntries.length > MAX_LOG_ENTRIES) devLogEntries.shift();
+
+    updateLogDisplay();
+}
+
+/**
+ * Aggiunge un log forzato nel dev log (es. dati tecnici strutturati).
+ * @param {string} msg
+ * @param {object} [data]
+ */
+function addDevLog(msg, data) {
+    let details;
+    if (data) {
+        try {
+            details = JSON.stringify(data, null, 2).slice(0, 500);
+        } catch (_) {
+            details = String(data).slice(0, 500);
+        }
+    }
+    const entry = { level: "debug", msg, details, ts: Date.now() };
+    devLogEntries.push(entry);
+    if (devLogEntries.length > MAX_LOG_ENTRIES) devLogEntries.shift();
+    updateLogDisplay();
+}
+
+/**
+ * Formatta un timestamp HH:MM:SS
+ * @param {number} ts
+ * @returns {string}
+ */
+function formatTime(ts) {
+    const d = new Date(ts);
+    return d.toLocaleTimeString("it-IT", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    });
+}
+
+/**
+ * Renderizza HTML per un singolo log entry
+ * @param {{ level: LogLevel, msg: string, details?: string, ts: number }} entry
+ * @param {boolean} isDev - se true, usa stili più compatti
+ * @returns {string}
+ */
+function renderLogEntry(entry, isDev) {
+    const icon = LOG_ICONS[entry.level] ?? "";
+    const time = formatTime(entry.ts);
+    const levelClass = `log-${entry.level}`;
+
+    // Rimuovi l'icona dal messaggio se già presente (per evitare doppie icone)
+    let cleanMsg = entry.msg;
+    const iconPrefixes = ["✅", "❌", "⚠️", "ℹ️", "🔌", "📋", "🔍"];
+    for (const iconChar of iconPrefixes) {
+        if (cleanMsg.startsWith(iconChar + " ")) cleanMsg = cleanMsg.slice(2);
+        if (cleanMsg.startsWith(iconChar)) cleanMsg = cleanMsg.slice(1);
+    }
+    cleanMsg = cleanMsg.trim();
+
+    const detailsHtml = entry.details
+        ? `<div class="log-entry-details">${escapeHtml(entry.details)}</div>`
+        : "";
+
+    return `<div class="log-entry ${levelClass}">
+        <span class="log-icon">${icon}</span>
+        <span class="log-time">[${time}]</span>
+        <span class="log-msg">${escapeHtml(cleanMsg)}</span>
+        ${detailsHtml}
+    </div>`;
+}
+
+/**
+ * Escape HTML di base per sicurezza
+ * @param {string} str
+ * @returns {string}
+ */
+function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function updateLogDisplay() {
+    const userLogList = document.getElementById("logUserList");
+    const devLogList = document.getElementById("logDevList");
+    const tabUser = document.getElementById("tabUserLog");
+    const tabDev = document.getElementById("tabDevLog");
+    const isUserTabActive = tabUser.classList.contains("active");
+
+    // Update user log list
+    userLogList.innerHTML = userLogEntries
+        .map(e => renderLogEntry(e, false))
+        .join("");
+
+    // Update dev log list
+    devLogList.innerHTML = devLogEntries
+        .map(e => renderLogEntry(e, true))
+        .join("");
+
+    // Update tab counters
+    const userCount = tabUser.querySelector(".tab-count");
+    const devCount = tabDev.querySelector(".tab-count");
+    if (userCount) userCount.textContent = String(userLogEntries.length);
+    if (devCount) devCount.textContent = String(devLogEntries.length);
+
+    // Ensure the active tab's list is scrolled to bottom
+    const activeList = isUserTabActive ? userLogList : devLogList;
+    if (activeList) {
+        activeList.scrollTop = activeList.scrollHeight;
     }
 }
 
@@ -426,6 +651,27 @@ window.bot.onStatus(setStatus);
 window.bot.onQueueUpdate(renderQueue);
 window.bot.onLog(addLog);
 
+/**
+ * Aggiorna il pallino di stato per una singola piattaforma nel footer.
+ * @param {"twitch"} platform
+ * @param {"connected"|"disconnected"|"error"|"none"} status
+ */
+function setPlatformStatus(platform, status) {
+    const badge = document.getElementById(`${platform}StatusBadge`);
+    const dot = document.getElementById(`${platform}StatusDot`);
+    if (!badge || !dot) return;
+    if (status === "none" || status === "disconnected") {
+        badge.style.display = "none";
+        return;
+    }
+    badge.style.display = "flex";
+    dot.className = "status-dot " + status; // "connected" | "error"
+}
+
+window.bot.onPlatformStatus(({ platform, status }) =>
+    setPlatformStatus(platform, status),
+);
+
 function updateRiotStatus({ ok, error }) {
     const badge = document.getElementById("riotStatusBadge");
     const dot = document.getElementById("riotStatusDot");
@@ -433,13 +679,13 @@ function updateRiotStatus({ ok, error }) {
     badge.style.display = "flex";
     if (ok) {
         dot.className = "status-dot connected";
-        text.textContent = "Riot API ✓";
+        text.textContent = "Riot API";
     } else if (error === "Configurazione incompleta") {
         dot.className = "status-dot disconnected";
         text.textContent = "Riot API — Non configurata";
     } else {
         dot.className = "status-dot error";
-        text.textContent = "Riot API ✗ — Key non valida";
+        text.textContent = "Riot API — Key non valida";
         addLog(`❌ Riot API KEY non valida: ${error}`);
     }
 }
@@ -513,7 +759,9 @@ addTwitchInput.addEventListener("keydown", e => {
 });
 
 document.getElementById("btnClearLog").addEventListener("click", () => {
-    logList.innerHTML = "";
+    userLogEntries = [];
+    devLogEntries = [];
+    updateLogDisplay();
 });
 
 // ── Toggle Coda ────────────────────────────────────────────────
@@ -570,6 +818,26 @@ document.getElementById("btnSaveQueue").addEventListener("click", async () => {
         window.bot.getQueue().then(renderQueue);
     }
 })();
+// Log tab switching
+document.getElementById("tabUserLog").addEventListener("click", () => {
+    document.getElementById("tabUserLog").classList.add("active");
+    document.getElementById("tabDevLog").classList.remove("active");
+    document.getElementById("logUserList").style.display = "block";
+    document.getElementById("logDevList").style.display = "none";
+    // Scroll to bottom of active log
+    const activeList = document.getElementById("logUserList");
+    if (activeList) activeList.scrollTop = activeList.scrollHeight;
+});
+
+document.getElementById("tabDevLog").addEventListener("click", () => {
+    document.getElementById("tabDevLog").classList.add("active");
+    document.getElementById("tabUserLog").classList.remove("active");
+    document.getElementById("logDevList").style.display = "block";
+    document.getElementById("logUserList").style.display = "none";
+    // Scroll to bottom of active log
+    const activeList = document.getElementById("logDevList");
+    if (activeList) activeList.scrollTop = activeList.scrollHeight;
+});
 
 // ── Auto-updater ───────────────────────────────────────────────
 

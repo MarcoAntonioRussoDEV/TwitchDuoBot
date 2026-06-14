@@ -1,5 +1,9 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
+contextBridge.exposeInMainWorld("auth", {
+    loginTwitch: () => ipcRenderer.invoke("auth:twitch:login"),
+});
+
 contextBridge.exposeInMainWorld("shell", {
     openExternal: url => ipcRenderer.invoke("shell:openExternal", url),
     getVersion: () => ipcRenderer.invoke("app:getVersion"),
@@ -52,4 +56,10 @@ contextBridge.exposeInMainWorld("bot", {
         ipcRenderer.on("bot:riot-status", (_, result) => cb(result)),
     onQueueState: cb =>
         ipcRenderer.on("bot:queue-state", (_, open) => cb(open)),
+    onPlatformStatus: cb =>
+        ipcRenderer.on("bot:platform-status", (_, data) => cb(data)),
+});
+
+contextBridge.exposeInMainWorld("debug", {
+    log: (...args) => ipcRenderer.send("renderer-log", args),
 });

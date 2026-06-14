@@ -19,6 +19,9 @@ jsconfig.json
 Thumbs.db
 
 # Editor
-.vscode/settings.json
+.vscode
 
 
+
+clearEnv
+.continue/
