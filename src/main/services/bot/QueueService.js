@@ -14,19 +14,20 @@ function normalize(str) {
 
 /**
  * Verifica se l'utente è moderatore o lo streamer stesso.
- * Supporta i tag di Twitch (tmi.js).
+ * Supporta i tag normalizzati di TwitchClient e KickClient.
  * @param {object} tags
  * @returns {boolean}
  */
 function isModOrStreamer(tags) {
     const user = (tags.username ?? "").toLowerCase();
-    // Controlla contro entrambe le piattaforme configurate
     const twitchStreamer = (process.env.TWITCH_CHANNEL ?? "")
         .replace("#", "")
         .toLowerCase();
+    const kickStreamer = (process.env.KICK_CHANNEL ?? "").toLowerCase();
     return (
         tags.mod === true ||
         user === twitchStreamer ||
+        (kickStreamer !== "" && user === kickStreamer) ||
         tags.badges?.broadcaster === "1"
     );
 }

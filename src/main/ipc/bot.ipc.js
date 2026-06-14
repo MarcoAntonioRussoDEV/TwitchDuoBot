@@ -46,22 +46,15 @@ function registerBotIpc(win) {
     ipcMain.handle("bot:getLiveRankData", () => bot.adminGetLiveRankData());
 
     // ── Push eventi: bot → renderer ──────────────────────────────────────────
-    // win?.webContents.send() invia messaggi al renderer senza aspettare risposta.
-    // Il "?" protegge in caso la finestra venga chiusa prima che l'evento arrivi.
-    bot.on("log", msg => win?.webContents.send("bot:log", msg));
-    bot.on("queue-update", queue =>
-        win?.webContents.send("bot:queue-update", queue),
-    );
-    bot.on("status", status => win?.webContents.send("bot:status", status));
-    bot.on("riot-status", result =>
-        win?.webContents.send("bot:riot-status", result),
-    );
-    bot.on("queue-state", open =>
-        win?.webContents.send("bot:queue-state", open),
-    );
-    bot.on("platform-status", data =>
-        win?.webContents.send("bot:platform-status", data),
-    );
+    const send = (channel, data) => {
+        if (win && !win.isDestroyed()) win.webContents.send(channel, data);
+    };
+    bot.on("log", msg => send("bot:log", msg));
+    bot.on("queue-update", queue => send("bot:queue-update", queue));
+    bot.on("status", status => send("bot:status", status));
+    bot.on("riot-status", result => send("bot:riot-status", result));
+    bot.on("queue-state", open => send("bot:queue-state", open));
+    bot.on("platform-status", data => send("bot:platform-status", data));
 }
 
 module.exports = { registerBotIpc };

@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("auth", {
     loginTwitch: () => ipcRenderer.invoke("auth:twitch:login"),
+    loginKick: () => ipcRenderer.invoke("auth:kick:login"),
 });
 
 contextBridge.exposeInMainWorld("shell", {

@@ -38,6 +38,13 @@ async function openSettings({ mandatory = false } = {}) {
         : "Non connesso";
     twitchStatus.style.color = twitchUser ? "#9147ff" : "#888";
 
+    const kickStatus = document.getElementById("kickLoginStatus");
+    const kickUser = cfg.KICK_BOT_USERNAME;
+    kickStatus.textContent = kickUser
+        ? `Connesso come: @${kickUser}`
+        : "Non connesso";
+    kickStatus.style.color = kickUser ? "#53fc18" : "#888";
+
     loadRiotAccountRows(cfg.STREAMER_RIOT_ACCOUNTS ?? "");
     modalWarning.classList.toggle("show", mandatory);
     // Se obbligatorio (primo avvio), nasconde il pulsante Annulla
@@ -86,6 +93,29 @@ document
             loginStatus.textContent = "Non connesso";
             loginStatus.style.color = "#888";
             addLog(`❌ Errore login Twitch: ${err.message}`);
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+document
+    .getElementById("btnKickLogin")
+    .addEventListener("click", async () => {
+        const loginStatus = document.getElementById("kickLoginStatus");
+        const btn = document.getElementById("btnKickLogin");
+        loginStatus.textContent = "Autenticazione in corso...";
+        loginStatus.style.color = "#888";
+        btn.disabled = true;
+
+        try {
+            const result = await window.auth.loginKick();
+            loginStatus.textContent = `Connesso come: @${result.username}`;
+            loginStatus.style.color = "#53fc18";
+            addLog(`✅ Login Kick riuscito come @${result.username}`);
+        } catch (err) {
+            loginStatus.textContent = "Non connesso";
+            loginStatus.style.color = "#888";
+            addLog(`❌ Errore login Kick: ${err.message}`);
         } finally {
             btn.disabled = false;
         }

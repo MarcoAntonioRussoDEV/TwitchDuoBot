@@ -2,6 +2,7 @@ const { EventEmitter } = require("events");
 const riot = require("../RiotService");
 const { QueueService, isModOrStreamer } = require("./QueueService");
 const TwitchClient = require("./TwitchClient");
+const KickClient = require("./KickClient");
 const logger = require("../Logger");
 
 const CHECK_INTERVAL = 30_000; // 30 secondi
@@ -31,6 +32,7 @@ class BotManager extends EventEmitter {
         super();
         this.queueService = new QueueService();
         this.twitchClient = new TwitchClient();
+        this.kickClient = new KickClient();
         this.queueOpen = true;
         this.running = false;
         this.botStartTime = Date.now();
@@ -94,6 +96,34 @@ class BotManager extends EventEmitter {
             }
         }
 
+        // ── Kick ──────────────────────────────────────────────────────────────────
+        const hasKick =
+            process.env.KICK_ACCESS_TOKEN && process.env.KICK_CHANNEL;
+
+        if (hasKick) {
+            try {
+                await this.kickClient.connect(
+                    process.env.KICK_ACCESS_TOKEN,
+                    process.env.KICK_CHANNEL,
+                );
+                this.kickClient.on("command", ctx =>
+                    this._handleCommand(ctx),
+                );
+                this._log("✅ Connesso a Kick");
+                this.emit("platform-status", {
+                    platform: "kick",
+                    status: "connected",
+                });
+                anyConnected = true;
+            } catch (err) {
+                this._log(`❌ Errore connessione Kick: ${err.message}`);
+                this.emit("platform-status", {
+                    platform: "kick",
+                    status: "error",
+                });
+            }
+        }
+
         if (!anyConnected) {
             this.running = false;
             this.emit("status", "error");
@@ -116,12 +146,12 @@ class BotManager extends EventEmitter {
         this._say("🔴 Bot disconnesso.");
         await this.twitchClient.disconnect();
         this.twitchClient.removeAllListeners("command");
+        this.emit("platform-status", { platform: "twitch", status: "disconnected" });
+        await this.kickClient.disconnect();
+        this.kickClient.removeAllListeners("command");
+        this.emit("platform-status", { platform: "kick", status: "disconnected" });
         this.running = false;
         this.emit("status", "disconnected");
-        this.emit("platform-status", {
-            platform: "twitch",
-            status: "disconnected",
-        });
         this._log("Bot disconnesso");
     }
 
@@ -150,11 +180,7 @@ class BotManager extends EventEmitter {
     adminNext() {
         if (this.queue.length < 2) return null;
         const entry = this.queue[1];
-        if (this.twitchClient.connected) {
-            this.twitchClient.say(
-                `Prossimo: @${entry.twitchUser} (${entry.lolNick})`,
-            );
-        }
+        this._say(`Prossimo: @${entry.twitchUser} (${entry.lolNick})`);
         this._log(`[UI] Prossimo: @${entry.twitchUser} (${entry.lolNick})`);
         return entry;
     }
@@ -166,11 +192,7 @@ class BotManager extends EventEmitter {
         let next = null;
         if (this.queue.length > 0) {
             next = this.queue[0];
-            if (this.twitchClient.connected) {
-                this.twitchClient.say(
-                    `Prossimo: @${next.twitchUser} (${next.lolNick})`,
-                );
-            }
+            this._say(`Prossimo: @${next.twitchUser} (${next.lolNick})`);
             this._log(`[UI] Prossimo: @${next.twitchUser} (${next.lolNick})`);
         }
         this._emitQueue();
@@ -179,8 +201,7 @@ class BotManager extends EventEmitter {
 
     adminClearQueue() {
         this.queueService.clear();
-        if (this.twitchClient.connected)
-            this.twitchClient.say("La coda è stata svuotata!");
+        this._say("La coda è stata svuotata!");
         this._log("[UI] Coda svuotata");
         this._emitQueue();
     }
@@ -188,11 +209,7 @@ class BotManager extends EventEmitter {
     adminRemove(nick) {
         const removed = this.queueService.remove(nick);
         if (!removed) return null;
-        if (this.twitchClient.connected) {
-            this.twitchClient.say(
-                `Rimosso dalla coda: @${removed.twitchUser} (${removed.lolNick})`,
-            );
-        }
+        this._say(`Rimosso dalla coda: @${removed.twitchUser} (${removed.lolNick})`);
         this._log(`[UI] Rimosso: @${removed.twitchUser} (${removed.lolNick})`);
         this._emitQueue();
         return removed;
@@ -201,11 +218,7 @@ class BotManager extends EventEmitter {
     adminAdd(twitchUser, lolNick) {
         const result = this.queueService.addManual(twitchUser, lolNick);
         if (!result.ok) return result;
-        if (this.twitchClient.connected) {
-            this.twitchClient.say(
-                `Aggiunto manualmente in coda: @${result.entry.twitchUser} (${result.entry.lolNick})`,
-            );
-        }
+        this._say(`Aggiunto manualmente in coda: @${result.entry.twitchUser} (${result.entry.lolNick})`);
         this._log(
             `[UI] Aggiunto manualmente: @${result.entry.twitchUser} (${result.entry.lolNick})`,
         );
@@ -311,6 +324,7 @@ class BotManager extends EventEmitter {
      */
     _say(message) {
         if (this.twitchClient.connected) this.twitchClient.say(message);
+        if (this.kickClient.connected) this.kickClient.say(message);
     }
 
     _noPerms(channel, tags) {
@@ -559,7 +573,7 @@ class BotManager extends EventEmitter {
                         details,
                     );
                     removed.forEach(entry => {
-                        this.twitchClient.say(
+                        this._say(
                             `@${entry.twitchUser} è stato rimosso dalla coda perché ha giocato con lo streamer`,
                         );
                         this._log(

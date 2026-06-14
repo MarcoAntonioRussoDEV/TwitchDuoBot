@@ -1,8 +1,14 @@
 /**
  * prebuild-env.js
  * Eseguito automaticamente da npm prima di "build" e "deploy".
- * Sostituisce .env con una versione minimale (solo RIOT_API_KEY e TWITCH_CLIENT_ID) per il bundle,
+ * Sostituisce .env con una versione minimale (solo le chiavi developer da bundlare)
  * salvando l'originale in .env.bak così il postbuild può ripristinarlo.
+ *
+ * Ordine di priorità per ogni chiave: process.env > .env locale.
+ * Questo permette di sovrascrivere le chiavi da CI senza modificare .env.
+ *
+ * Chiavi bundlate nell'app (developer secrets, mai token personali):
+ *   RIOT_API_KEY, TWITCH_CLIENT_ID, KICK_CLIENT_ID, KICK_CLIENT_SECRET
  */
 
 const fs = require("fs");
@@ -13,25 +19,38 @@ const root = path.join(__dirname, "..");
 const envPath = path.join(root, ".env");
 const backupPath = path.join(root, ".env.bak");
 
-// Legge RIOT_API_KEY dall'env corrente (variabile d'ambiente CI o dal file .env locale)
-let riotKey = process.env.RIOT_API_KEY;
-let twitchClientId = process.env.TWITCH_CLIENT_ID;
-if (!riotKey && fs.existsSync(envPath)) {
-    const parsed = dotenv.parse(fs.readFileSync(envPath, "utf8"));
+// Legge il .env locale come fallback (se esiste)
+const localEnv = fs.existsSync(envPath)
+    ? dotenv.parse(fs.readFileSync(envPath, "utf8"))
+    : {};
 
-    riotKey = parsed.RIOT_API_KEY ?? "";
-    twitchClientId = parsed.TWITCH_CLIENT_ID ?? "";
-}
+/** @param {string} key */
+const get = key => process.env[key] || localEnv[key] || "";
 
-// Backup del .env originale (se esiste)
+const riotKey        = get("RIOT_API_KEY");
+const twitchClientId = get("TWITCH_CLIENT_ID");
+const kickClientId   = get("KICK_CLIENT_ID");
+const kickClientSecret = get("KICK_CLIENT_SECRET");
+
+if (!riotKey)        console.warn("[prebuild-env] ATTENZIONE: RIOT_API_KEY non trovata.");
+if (!twitchClientId) console.warn("[prebuild-env] ATTENZIONE: TWITCH_CLIENT_ID non trovata.");
+if (!kickClientId)   console.warn("[prebuild-env] ATTENZIONE: KICK_CLIENT_ID non trovata.");
+if (!kickClientSecret) console.warn("[prebuild-env] ATTENZIONE: KICK_CLIENT_SECRET non trovata.");
+
+// Backup del .env originale
 if (fs.existsSync(envPath)) {
     fs.copyFileSync(envPath, backupPath);
 }
 
-// Scrive un .env minimalista — nessun token personale
+// Scrive un .env minimale — solo le chiavi developer, nessun token personale
 fs.writeFileSync(
     envPath,
-    `RIOT_API_KEY=${riotKey}\nTWITCH_CLIENT_ID=${twitchClientId}\n`,
+    [
+        `RIOT_API_KEY=${riotKey}`,
+        `TWITCH_CLIENT_ID=${twitchClientId}`,
+        `KICK_CLIENT_ID=${kickClientId}`,
+        `KICK_CLIENT_SECRET=${kickClientSecret}`,
+    ].join("\n") + "\n",
 );
 
 console.log("[prebuild-env] .env sostituito con versione bundle-safe.");

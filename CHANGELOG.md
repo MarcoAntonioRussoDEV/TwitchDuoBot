@@ -1,5 +1,18 @@
 ## Change Logs
 
+## 1.5.0
+
+- **Integrazione Kick**: il bot ora si connette alla chat Kick oltre che a Twitch.
+    - Login OAuth2 + PKCE via browser reale (Google SSO compatibile) con redirect locale su `localhost:17564`.
+    - Ricezione messaggi in tempo reale tramite Pusher WebSocket (`chatrooms.{chatroomId}.v2`).
+    - Invio messaggi tramite API pubblica Kick v1 (`api.kick.com/public/v1/chat`), con supporto automatico alla suddivisione dei messaggi lunghi (> 490 caratteri) per rispettare il limite di Kick.
+    - Tutti i comandi esistenti (`!duo`, `!queue`, `!queuehelp`, `!me`, `!next`, ecc.) funzionano su entrambe le piattaforme simultaneamente.
+    - Badge streamer/mod/subscriber di Kick normalizzati nel contratto condiviso con TwitchClient.
+    - Stato connessione Kick visibile nel footer dell'UI (pallino verde **KICK**).
+    - ⚠️ **Limitazione nota**: il `KICK_CHATROOM_ID` deve essere inserito manualmente nel file `.env` — l'API pubblica Kick v1 non espone il chatroom ID e `kick.com/api/v2` è bloccata da Cloudflare per le richieste Node.js. L'ID si trova nelle DevTools del browser ispezionando le richieste WebSocket della chat.
+- **Fix crash al riavvio**: risolto `UnhandledPromiseRejection: Object has been destroyed` causato da `electron-reload` che tentava di inviare eventi IPC a una finestra già distrutta.
+- **Fix riavvio in sviluppo**: aggiunto `saved-queue.json` al pattern ignorato da `electron-reload` per evitare che il salvataggio automatico della coda causasse un riavvio dell'app in modalità dev.
+
 ## 1.4.0
 
 - Aggiunta autenticazione Twitch OAuth

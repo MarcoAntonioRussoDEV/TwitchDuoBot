@@ -301,6 +301,36 @@
                     </small>
                 </div>
 
+                <div class="modal-section">Kick <small style="color:#555;font-weight:400">(opzionale)</small></div>
+                <div class="field">
+                    <label>Account bot Kick</label>
+                    <div style="display: flex; gap: 8px; align-items: center">
+                        <span
+                            id="kickLoginStatus"
+                            style="flex: 1; color: #888; font-size: 13px"
+                            >Non connesso</span
+                        >
+                        <button
+                            type="button"
+                            class="btn btn-sm"
+                            id="btnKickLogin"
+                            style="background: #53fc18; color: #000; border-color: #53fc18; font-weight: 700"
+                        >
+                            &#x26A1; Accedi con Kick
+                        </button>
+                    </div>
+                    <small
+                        style="
+                            color: #888;
+                            font-size: 11px;
+                            margin-top: 4px;
+                            display: block;
+                        "
+                    >
+                        Il bot leggerà e risponderà anche nella chat Kick.
+                    </small>
+                </div>
+
                 <div class="modal-section">Riot / League of Legends</div>
                 <div class="field">
                     <label
@@ -424,6 +454,18 @@
                         class="fa-brands fa-twitch"
                         style="color: #9147ff; font-size: 11px"
                     ></i>
+                </div>
+
+                <div
+                    class="status-badge"
+                    id="kickStatusBadge"
+                    style="display: none"
+                >
+                    <div
+                        class="status-dot"
+                        id="kickStatusDot"
+                    ></div>
+                    <span style="font-size: 11px; color: #53fc18; font-weight: 700">KICK</span>
                 </div>
 
                 <div

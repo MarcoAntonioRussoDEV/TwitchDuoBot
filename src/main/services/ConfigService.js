@@ -8,6 +8,11 @@ const CONFIG_KEYS = [
     "TWITCH_BOT_USERNAME",
     "TWITCH_ACCESS_TOKEN",
     "TWITCH_CHANNEL",
+    // Kick (opzionale)
+    "KICK_BOT_USERNAME",
+    "KICK_ACCESS_TOKEN",
+    "KICK_CHANNEL",
+    "KICK_CHATROOM_ID",
     // Riot
     "STREAMER_RIOT_ACCOUNTS",
     "DUO_SUB_ONLY",

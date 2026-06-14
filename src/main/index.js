@@ -31,7 +31,7 @@ if (!app.isPackaged) {
             "electron",
         ),
         hardResetMethod: "exit",
-        ignored: /node_modules|dist|\.git|\.env/,
+        ignored: /node_modules|dist|\.git|\.env|saved-queue\.json/,
     });
 }
 

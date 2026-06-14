@@ -159,9 +159,7 @@ class PusherClient extends EventEmitter {
             return;
         }
 
-        if (process.env.DEBUG) {
-            this.emit("debug", msg);
-        }
+        this.emit("debug", msg);
     }
 
     _parseData(data) {
