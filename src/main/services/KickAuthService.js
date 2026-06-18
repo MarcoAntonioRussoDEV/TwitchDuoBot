@@ -20,7 +20,14 @@ const AUTH_TIMEOUT_MS = 5 * 60 * 1000;
  * riprova dopo ogni caricamento finché non si trova il chatroom_id.
  */
 async function fetchChatroomId(slug, accessToken) {
-    // Primo tentativo: API pubblica v1 con endpoint chatrooms (non documentato)
+    // Primo tentativo: API pubblica kick.com/api/v1 (no auth, non bloccata da Cloudflare)
+    try {
+        const r = await axios.get(`https://kick.com/api/v1/channels/${slug}`);
+        const id = r.data?.chatroom?.id;
+        if (id) return id;
+    } catch (_) {}
+
+    // Secondo tentativo: API pubblica v1 con endpoint chatrooms (non documentato)
     try {
         const r = await axios.get(
             `https://api.kick.com/public/v1/chatrooms`,

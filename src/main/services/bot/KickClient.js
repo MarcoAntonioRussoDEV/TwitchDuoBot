@@ -46,13 +46,17 @@ class KickClient extends EventEmitter {
         this._accessToken = accessToken;
         this._channel = channel.toLowerCase();
 
-        // 1. Legge chatroom_id dal config (salvato al momento del login OAuth tramite
-        //    BrowserWindow in KickAuthService). kick.com/api/v2 restituisce 403 da
-        //    Node.js (Cloudflare) quindi il fetch avviene una sola volta via Chromium.
-        const chatroomId = Number.parseInt(process.env.KICK_CHATROOM_ID ?? "", 10);
+        // 1. Legge chatroom_id dal config; se assente lo recupera via API pubblica.
+        let chatroomId = Number.parseInt(process.env.KICK_CHATROOM_ID ?? "", 10);
+        if (!chatroomId) {
+            try {
+                const r = await axios.get(`https://kick.com/api/v1/channels/${this._channel}`);
+                chatroomId = r.data?.chatroom?.id;
+            } catch (_) {}
+        }
         if (!chatroomId) {
             throw new Error(
-                "KICK_CHATROOM_ID non configurato — esegui di nuovo il login Kick dalle impostazioni.",
+                "Impossibile ottenere KICK_CHATROOM_ID — esegui di nuovo il login Kick dalle impostazioni.",
             );
         }
         this._chatroomId = chatroomId;
