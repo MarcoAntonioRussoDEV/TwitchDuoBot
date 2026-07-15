@@ -10,7 +10,96 @@ const KICK_USERS_URL = "https://api.kick.com/public/v1/users";
 const SCOPES = "user:read channel:read chat:write events:subscribe";
 const REDIRECT_URI = "http://localhost:17564";
 const AUTH_TIMEOUT_MS = 5 * 60 * 1000;
+<<<<<<< HEAD
 const CHATROOM_TIMEOUT_MS = 8000;
+=======
+
+/**
+ * Apre una BrowserWindow nascosta (Chromium reale) per caricare la pagina del
+ * canale Kick ed estrarre il chatroom_id via JS.
+ *
+ * Kick usa Cloudflare che blocca Node.js/axios (403), ma Chromium supera i
+ * challenge JS. Il flusso è: challenge Cloudflare → redirect → pagina Kick.
+ * Ogni did-finish-load può essere il challenge o la pagina reale, quindi si
+ * riprova dopo ogni caricamento finché non si trova il chatroom_id.
+ */
+async function fetchChatroomId(slug, accessToken) {
+    // Primo tentativo: API pubblica kick.com/api/v1 (no auth, non bloccata da Cloudflare)
+    try {
+        const r = await axios.get(`https://kick.com/api/v1/channels/${slug}`);
+        const id = r.data?.chatroom?.id;
+        if (id) return id;
+    } catch (_) {}
+
+    // Secondo tentativo: API pubblica v1 con endpoint chatrooms (non documentato)
+    try {
+        const r = await axios.get(
+            `https://api.kick.com/public/v1/chatrooms`,
+            {
+                params: { broadcaster_username: slug },
+                headers: { Authorization: `Bearer ${accessToken}` },
+            },
+        );
+        const id = r.data?.data?.[0]?.id ?? r.data?.id ?? r.data?.chatroom_id;
+        if (id) return id;
+    } catch (_) {}
+
+    // Secondo tentativo: API pubblica v1 path-param channel
+    try {
+        const r = await axios.get(
+            `https://api.kick.com/public/v1/channels/${slug}`,
+            { headers: { Authorization: `Bearer ${accessToken}` } },
+        );
+        const id = r.data?.chatroom?.id ?? r.data?.chatroom_id ?? r.data?.data?.chatroom?.id;
+        if (id) return id;
+    } catch (_) {}
+
+    // Terzo tentativo: v2 dall'interno della pagina Kick (BrowserWindow),
+    // stavolta con Bearer token OAuth nell'header.
+    return new Promise(resolve => {
+        const win = new BrowserWindow({
+            show: false,
+            webPreferences: { nodeIntegration: false, contextIsolation: true },
+        });
+
+        let done = false;
+        const finish = id => {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            try { win.destroy(); } catch (_) {}
+            resolve(id ?? null);
+        };
+
+        const tryExtract = async () => {
+            if (done) return;
+            const url = win.webContents.getURL();
+            if (!url.includes(`kick.com/${slug}`)) return;
+            try {
+                const result = await win.webContents.executeJavaScript(`
+                    (async function(){
+                        try {
+                            const r = await fetch("/api/v2/channels/${slug}", {
+                                headers: { "Authorization": "Bearer ${accessToken}" }
+                            });
+                            const d = await r.json();
+                            return JSON.stringify({ chatroom: d && d.chatroom ? d.chatroom.id : null });
+                        } catch(e) { return JSON.stringify({ error: e.message }); }
+                    })()
+                `);
+                const p = JSON.parse(result);
+                if (p.chatroom) finish(p.chatroom);
+                else finish(null);
+            } catch (_) { finish(null); }
+        };
+
+        win.webContents.on("did-finish-load", () => setTimeout(tryExtract, 1000));
+        win.webContents.on("did-fail-load", () => finish(null));
+        const timer = setTimeout(() => finish(null), 20_000);
+        win.loadURL(`https://kick.com/${slug}`);
+    });
+}
+>>>>>>> a503cc7691b8a8328d47289efe4c62b0864fad2a
 
 /** Base64URL senza padding (RFC 7636 §4.1). */
 function base64url(buffer) {
