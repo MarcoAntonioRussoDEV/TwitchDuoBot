@@ -3,7 +3,6 @@ const riot = require("../RiotService");
 const { QueueService, isModOrStreamer } = require("./QueueService");
 const TwitchClient = require("./TwitchClient");
 const KickClient = require("./KickClient");
-const logger = require("../Logger");
 
 const CHECK_INTERVAL = 30_000; // 30 secondi
 
@@ -54,12 +53,6 @@ class BotManager extends EventEmitter {
     async start() {
         if (this.running) return;
 
-        // Collega il logger al bot per inoltrare i log alla UI
-        logger.setEmitFn(msg => {
-            if (this.running || this.emit) {
-                this.emit("log", msg);
-            }
-        });
         this.running = true;
         this.botStartTime = Date.now();
 

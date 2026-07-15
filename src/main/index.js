@@ -5,6 +5,7 @@ const path = require("path");
 const configService = require("./services/ConfigService");
 const updaterService = require("./services/UpdaterService");
 const bot = require("./services/bot/BotManager");
+const logger = require("./services/Logger");
 
 // ─── IPC Registrars ───────────────────────────────────────────────────────────
 const { registerBotIpc } = require("./ipc/bot.ipc");
@@ -105,6 +106,12 @@ function createWindow() {
  */
 app.whenReady().then(() => {
     createWindow();
+
+    // Collega il logger alla finestra fin dall'avvio (non solo dopo bot.start()),
+    // così i log tecnici (es. login OAuth) raggiungono il Dev Log da subito.
+    logger.setEmitFn(msg => {
+        if (win && !win.isDestroyed()) win.webContents.send("bot:log", msg);
+    });
 
     // Registra tutti gli IPC handler.
     // bot.ipc riceve `win` perché deve fare webContents.send() per push eventi.

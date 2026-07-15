@@ -468,6 +468,7 @@ function classifyLog(msg) {
     // Dev-only patterns — messaggi tecnici che vanno SOLO nel dev log
     const devOnlyPatterns = [
         /^\[TwitchAuth\]/,
+        /^\[KickAuth\]/,
         /^\[Riot\]/,
         /^\[Twitch\]/,
         /^(DEBUG|TRACE)/i,

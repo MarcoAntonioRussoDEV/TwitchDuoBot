@@ -1,5 +1,10 @@
 ## Change Logs
 
+## 1.5.1
+
+- **Fix recupero `KICK_CHATROOM_ID`**: la `BrowserWindow` nascosta usata finora per recuperare il chatroom id veniva sempre bloccata (403 "security policy") dal WAF Cloudflare di `kick.com`, indipendentemente da user agent/client hints — il fingerprint TLS del motore Chromium interno di Electron risulta diverso da quello di un Chrome vero installato sul sistema (verificato: lo stesso URL, con lo stesso identico user agent, funziona dal browser reale dell'utente ma non dalla `BrowserWindow`). L'API pubblica OAuth di Kick, inoltre, non espone questo dato (verificato sulla documentazione ufficiale). La `BrowserWindow` è stata rimossa: ora è la pagina di successo mostrata al termine del login — aperta nel browser reale dell'utente, già accettato da Cloudflare per l'autenticazione — a recuperare il chatroom id (endpoint pubblico con CORS aperto) e a rimandarlo al server locale dell'app prima che questo si chiuda. Il chatroom ID continua a essere ricavato automaticamente al login, senza bisogno di inserirlo a mano nel `.env`.
+- **Dev Log ora utile**: il logger tecnico (`Logger.js`) era collegato alla UI solo dopo il primo avvio del bot — i log di login/OAuth (es. `[KickAuth]`) non arrivavano mai al Dev Log. Ora è collegato fin dall'apertura dell'app.
+
 ## 1.5.0
 
 - **Integrazione Kick**: il bot ora si connette alla chat Kick oltre che a Twitch.
